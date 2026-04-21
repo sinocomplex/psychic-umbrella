@@ -1,0 +1,25 @@
+{
+  "name": "摇号机 · 彩票生成器",
+  "short_name": "摇号机",
+  "description": "双色球 / 大乐透密码学级随机号码生成器",
+  "start_url": "./lottery.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0f0f0f",
+  "theme_color": "#ff6a00",
+  "lang": "zh-CN",
+  "icons": [
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
