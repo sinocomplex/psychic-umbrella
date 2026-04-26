@@ -10,18 +10,19 @@
 <style>
 /* ── 设计系统：PC 暗色 / 手机 浅色 ── */
 :root {
-  --bg:        #0f0f0f;
-  --surface:   #1a1a1a;
-  --panel:     #141414;
-  --border:    #2a2a2a;
+  --bg:        #0b0b0c;
+  --surface:   #121214;
+  --panel:     #18181b;
+  --border:    #2a2a2e;
+  --divider:   #2f2f33;
   --orange:    #ff6a00;
   --orange2:   #ff9a3c;
   --green:     #3bdb6e;
   --dim:       #555;
   --text:      #e8e0d0;
   --muted:     #888;
-  --mono:      'Share Tech Mono', monospace;
-  --sans:      'Noto Sans SC', sans-serif;
+  --mono:      "JetBrains Mono"， "SF Mono", monospace;
+  --sans:      -apple-system， BlinkMacSystemFont, "Inter", "SF Pro Text", "Noto Sans SC", sans-serif;
 
   /* 球 - PC 暗色版 */
   --ball-size:      52px;
@@ -30,27 +31,27 @@
 
   /* 红球 */
   --ball-red-bg: radial-gradient(circle at 35% 32%, rgba(255,160,140,0.85), #e03020 55%, #8b0e0e);
-  --ball-red-border: rgba(230,100,80,0.45);
+  --ball-red-border: rgba(230，100，80,0.45);
   --ball-red-text:   #fff;
-  --ball-red-glow: rgba(220,50,30,0.55) 0px 0px 16px, rgba(220,50,30,0.22) 0px 0px 36px;
+  --ball-red-glow: rgba(220，50,30,0.55) 0px 0px 16px, rgba(220,50,30,0.22) 0px 0px 36px;
 
   /* 蓝球 */
   --ball-blue-bg: radial-gradient(circle at 35% 32%, rgba(140,195,255,0.85), #1a6fd4 55%, #0a2e7a);
-  --ball-blue-border: rgba(100,170,255,0.4);
+  --ball-blue-border: rgba(100，170,255,0.4);
   --ball-blue-text:   #fff;
-  --ball-blue-glow: rgba(30,100,220,0.55) 0px 0px 16px, rgba(30,100,220,0.22) 0px 0px 36px;
+  --ball-blue-glow: rgba(30，100,220,0.55) 0px 0px 16px, rgba(30,100,220,0.22) 0px 0px 36px;
 
   /* 橙球 */
   --ball-org-bg: radial-gradient(circle at 35% 32%, rgba(255,200,120,0.85), #d95f00 55%, #7a2800);
-  --ball-org-border: rgba(255,150,60,0.4);
+  --ball-org-border: rgba(255，150,60,0.4);
   --ball-org-text:   #fff;
-  --ball-org-glow: rgba(220,100,0,0.55) 0px 0px 16px, rgba(220,100,0,0.22) 0px 0px 36px;
+  --ball-org-glow: rgba(220，100,0,0.55) 0px 0px 16px, rgba(220,100,0,0.22) 0px 0px 36px;
 
   /* 绿球 */
   --ball-grn-bg: radial-gradient(circle at 35% 32%, rgba(130,240,170,0.85), #1a9e4a 55%, #0a4a20);
-  --ball-grn-border: rgba(80,210,120,0.4);
+  --ball-grn-border: rgba(80，210,120,0.4);
   --ball-grn-text:   #fff;
-  --ball-grn-glow: rgba(20,160,70,0.55) 0px 0px 16px, rgba(20,160,70,0.22) 0px 0px 36px;
+  --ball-grn-glow: rgba(20，160,70,0.55) 0px 0px 16px, rgba(20,160,70,0.22) 0px 0px 36px;
 }
 
 @media (max-width: 540px) {
@@ -113,7 +114,7 @@ body {
   }
 }
 
-.container { position: relative; z-index: 1; width: 100%; max-width: 680px; }
+。container { position: relative; z-index: 1; width: 100%; max-width: 680px; }
 
 /* ── header ── */
 .header { text-align: center; margin-bottom: 36px; }
@@ -137,7 +138,7 @@ body {
   border-radius: 2px; overflow: hidden;
 }
 
-.machine-top {
+。machine-top {
   background: var(--panel); border-bottom: 1px solid var(--border);
   padding: 16px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
 }
