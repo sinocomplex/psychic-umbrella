@@ -1,28 +1,23 @@
-// sw.js — Service Worker
-// 缓存版本号：每次更新资源时修改这个值，旧缓存会自动清除
-const CACHE_NAME = 'yaohao-v1';
+const CACHE_NAME = 'yaohao-v2';
 
-// 需要离线缓存的资源列表
+// 预缓存（核心资源）
 const PRECACHE = [
-  './lottery.html',
-  './manifest.json',
-  './icon-192.png',
-  './icon-512.png',
+  '/',
+  '/lottery.html',
+  '/manifest.json',
+  '/icon-192.png',
+  '/icon-512.png'
 ];
 
-// ── 安装：预缓存所有资源 ──────────────────────────────────────
+// ── 安装 ─────────────────────────
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      // 字体来自 Google，网络失败时跳过（不影响核心功能）
-      return cache.addAll(PRECACHE).catch(() => {});
-    })
+    caches.open(CACHE_NAME).then(cache => cache.addAll(PRECACHE))
   );
-  // 跳过等待，立即激活新版本
   self.skipWaiting();
 });
 
-// ── 激活：清理旧版本缓存 ─────────────────────────────────────
+// ── 激活 ─────────────────────────
 self.addEventListener('activate', event => {
   event.waitUntil(
     caches.keys().then(keys =>
@@ -36,32 +31,46 @@ self.addEventListener('activate', event => {
   self.clients.claim();
 });
 
-// ── 拦截请求：Cache First，回退到网络 ───────────────────────
+// ── Fetch（核心升级） ─────────────
 self.addEventListener('fetch', event => {
-  // 只处理 GET 请求
-  if (event.request.method !== 'GET') return;
+  const req = event.request;
 
+  if (req.method !== 'GET') return;
+
+  // HTML：网络优先（保证更新）
+  if (req.destination === 'document') {
+    event.respondWith(
+      fetch(req)
+        .then(res => {
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(req, clone));
+          return res;
+        })
+        .catch(() => caches.match(req))
+    );
+    return;
+  }
+
+  // 其他资源：缓存优先
   event.respondWith(
-    caches.match(event.request).then(cached => {
+    caches.match(req).then(cached => {
       if (cached) return cached;
 
-      // 未命中缓存：去网络取，并顺手缓存
-      return fetch(event.request).then(response => {
-        // 只缓存同源的成功响应（避免缓存 CDN opaque 响应）
+      return fetch(req).then(res => {
         if (
-          response.ok &&
-          new URL(event.request.url).origin === self.location.origin
+          res.ok &&
+          new URL(req.url).origin === location.origin
         ) {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then(cache => cache.put(event.request, clone));
+          const clone = res.clone();
+          caches.open(CACHE_NAME).then(c => c.put(req, clone));
         }
-        return response;
-      }).catch(() => {
-        // 完全离线且未缓存时，返回离线提示页
-        if (event.request.destination === 'document') {
-          return caches.match('./lottery.html');
-        }
+        return res;
       });
     })
   );
+});
+
+// ── 支持主动更新 ───────────────
+self.addEventListener('message', e => {
+  if (e.data === 'SKIP_WAITING') self.skipWaiting();
 });
