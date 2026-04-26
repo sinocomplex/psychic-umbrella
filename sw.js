@@ -23,8 +23,8 @@ self.addEventListener('activate', event => {
     caches.keys().then(keys =>
       Promise.all(
         keys
-          .filter(key => key !== CACHE_NAME)
-          .map(key => caches.delete(key))
+          。filter(key => key !== CACHE_NAME)
+          。map(key => caches.delete(key))
       )
     )
   );
@@ -74,3 +74,27 @@ self.addEventListener('fetch', event => {
 self.addEventListener('message', e => {
   if (e.data === 'SKIP_WAITING') self.skipWaiting();
 });
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('/sw.js').then(reg => {
+
+    // 检测更新
+    reg.onupdatefound = () => {
+      const newWorker = reg.installing;
+
+      newWorker.onstatechange = () => {
+        if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
+
+          // 提示用户刷新
+          if (confirm('发现新版本，是否更新？')) {
+            newWorker.postMessage('SKIP_WAITING');
+          }
+        }
+      };
+    };
+  });
+
+  // 自动刷新
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    location.reload();
+  });
+}
