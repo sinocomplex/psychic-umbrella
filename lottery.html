@@ -472,10 +472,11 @@ function generateTicket(gameKey) {
 // ── DOM 构建 ─────────────────────────────────────────────────
 function pad(n) { return String(n).padStart(2, '0'); }
 
-function makeBall(n, cls, delay, noAnim = false) {
+function makeBall(n, cls, delay, noAnim = false, total = 35) {
   const el = document.createElement('span');
   el.className = `ball ${cls}`;
   el.textContent = pad(n);
+  el.dataset.total = total;   // 记录该球所属区段的最大值，供滚动动画使用
   if (!noAnim) el.style.animationDelay = delay + 'ms';
   return el;
 }
@@ -522,7 +523,7 @@ function makeRow(index, ticket, gameKey, noAnim = false) {
     const ballsWrap = document.createElement('div');
     ballsWrap.className = 'balls';
     ticket[sec.key].forEach((n, bi) => {
-      ballsWrap.appendChild(makeBall(n, sec.ballClass, (ballOffset + bi) * 38, noAnim));
+      ballsWrap.appendChild(makeBall(n, sec.ballClass, (ballOffset + bi) * 38, noAnim, sec.total));
     });
     ballOffset += ticket[sec.key].length;
     wrap.appendChild(ballsWrap);
@@ -547,63 +548,82 @@ function showEmpty() {
   state.currentResults = []; // 清空状态
 }
 
-function renderResults(gameKey, resultsData, noAnim = false) {
-  els.results.innerHTML = '';
-  const frag = document.createDocumentFragment();
-  resultsData.forEach((ticket, i) => {
-    frag.appendChild(makeRow(i, ticket, gameKey, noAnim));
-  });
-  els.results.appendChild(frag);
-  els.results.scrollTop = 0;
-  els.screenTitle.textContent = `${GAMES[gameKey].name} · ${resultsData.length} 注`;
+// ── 数据层：只管生成，不碰 DOM ───────────────────────────────
+
+// 生成本次所有注的最终数据，写入 state，返回结果供外部使用
+function generateData() {
+  const { game, sets } = state;
+  state.currentResults = Array.from({ length: sets }, () => generateTicket(game));
+  return state.currentResults;
 }
 
-// 摇号占位动画特效
-function startRollingEffect() {
+// 生成一套占位用的随机假数据（结构与真实数据相同，只是数字随机）
+function generatePlaceholderData() {
+  const { game, sets } = state;
+  return Array.from({ length: sets }, () => generateTicket(game));
+}
+
+// ── 动画层：只管 DOM 过渡效果，不生成业务数据 ────────────────
+
+// 显示 overlay + 禁用按钮 + 启动球面数字滚动
+function animateStart() {
   els.rolling.classList.add('show');
   els.btnGenerate.disabled = true;
   setStatus('ROLLING...', true);
 
-  // 1. 先生成一次假数据渲染出来（关闭动画）
-  const fakeData = Array.from({ length: state.sets }, () => generateTicket(state.game));
-  renderResults(state.game, fakeData, true);
-  
-  // 2. 让 DOM 里的数字开始快速跳动
+  // 用占位数据撑起球的 DOM 结构（noAnim=true 跳过进场动画）
+  const placeholder = generatePlaceholderData();
+  render(state.game, placeholder, { noAnim: true });
+
+  // 每隔 40ms 按各球自己的范围随机刷新数字
   const balls = els.results.querySelectorAll('.ball');
   rollIntervalId = setInterval(() => {
     balls.forEach(b => {
-      b.textContent = pad(Math.floor(Math.random() * 35) + 1);
+      const total = parseInt(b.dataset.total, 10);
+      b.textContent = pad(Math.floor(Math.random() * total) + 1);
     });
   }, 40);
 }
 
-function stopRollingEffect() {
+// 停止滚动、隐藏 overlay、恢复按钮
+function animateStop() {
   clearInterval(rollIntervalId);
   rollIntervalId = null;
   els.rolling.classList.remove('show');
   els.btnGenerate.disabled = false;
 }
 
-function finishGeneration() {
-  const { game, sets } = state;
-  // 核心：将生成的最终数据存入状态管理
-  state.currentResults = Array.from({ length: sets }, () => generateTicket(game));
-  
-  // 根据状态渲染（开启进场动画）
-  renderResults(game, state.currentResults);
-  
-  setStatus(`OK · ${sets} SETS · ${GAMES[game].name}`, true);
-  setTimeout(() => setStatus(`READY · LAST: ${GAMES[game].name} ${sets}注`, false), 2000);
+// ── 渲染层：只管把数据画到屏幕上 ────────────────────────────
+
+// options: { noAnim = false }
+function render(gameKey, results, { noAnim = false } = {}) {
+  els.results.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  results.forEach((ticket, i) => {
+    frag.appendChild(makeRow(i, ticket, gameKey, noAnim));
+  });
+  els.results.appendChild(frag);
+  els.results.scrollTop = 0;
+  els.screenTitle.textContent = `${GAMES[gameKey].name} · ${results.length} 注`;
 }
+
+// ── 控制层：编排数据 / 动画 / 渲染的时序 ────────────────────
 
 function generate() {
   if (state.rolling) return;
   state.rolling = true;
-  startRollingEffect();
-  
+
+  animateStart();                          // 1. 启动滚动动画
+
   setTimeout(() => {
-    stopRollingEffect();
-    finishGeneration();
+    animateStop();                         // 2. 停止动画
+    const results = generateData();        // 3. 生成最终数据（写入 state）
+    render(state.game, results);           // 4. 渲染最终结果（带进场动画）
+
+    const { game, sets } = state;
+    setStatus(`OK · ${sets} SETS · ${GAMES[game].name}`, true);
+    setTimeout(() => setStatus(`READY · LAST: ${GAMES[game].name} ${sets}注`, false), 2000);
+
     state.rolling = false;
   }, 650);
 }
