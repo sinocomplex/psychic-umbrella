@@ -3,8 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="theme-color" content="#f0ede8" media="(max-width: 540px)">
+<meta name="theme-color" content="#0f0f0f" media="(min-width: 541px)">
 <title>摇号机 · 彩票生成器</title>
-<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+SC:wght@400;500;700&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Share+Tech+Mono&family=Noto+Sans+SC:wght@400;500;700&family=Oswald:wght@700&display=swap" rel="stylesheet">
 <style>
 /* ── 设计系统：PC 暗色 / 手机 浅色 ── */
 :root {
@@ -21,61 +23,36 @@
   --mono:      'Share Tech Mono', monospace;
   --sans:      'Noto Sans SC', sans-serif;
 
-  /* 球 - PC 暗色版（三层光晕 + 半透明描边） */
+  /* 球 - PC 暗色版 */
   --ball-size:      52px;
   --ball-font:      19px;
   --ball-weight:    700;
 
-  /* 红球 —— 赤焰红 */
-  --ball-red-bg:
-    radial-gradient(circle at 35% 32%,
-      rgba(255,160,140,0.85),
-      #e03020 55%,
-      #8b0e0e);
+  /* 红球 */
+  --ball-red-bg: radial-gradient(circle at 35% 32%, rgba(255,160,140,0.85), #e03020 55%, #8b0e0e);
   --ball-red-border: rgba(230,100,80,0.45);
   --ball-red-text:   #fff;
-  --ball-red-glow:
-    rgba(220,50,30,0.55) 0px 0px 16px,
-    rgba(220,50,30,0.22) 0px 0px 36px;
+  --ball-red-glow: rgba(220,50,30,0.55) 0px 0px 16px, rgba(220,50,30,0.22) 0px 0px 36px;
 
-  /* 蓝球 —— 深海蓝 */
-  --ball-blue-bg:
-    radial-gradient(circle at 35% 32%,
-      rgba(140,195,255,0.85),
-      #1a6fd4 55%,
-      #0a2e7a);
+  /* 蓝球 */
+  --ball-blue-bg: radial-gradient(circle at 35% 32%, rgba(140,195,255,0.85), #1a6fd4 55%, #0a2e7a);
   --ball-blue-border: rgba(100,170,255,0.4);
   --ball-blue-text:   #fff;
-  --ball-blue-glow:
-    rgba(30,100,220,0.55) 0px 0px 16px,
-    rgba(30,100,220,0.22) 0px 0px 36px;
+  --ball-blue-glow: rgba(30,100,220,0.55) 0px 0px 16px, rgba(30,100,220,0.22) 0px 0px 36px;
 
-  /* 橙球 —— 烈日橙 */
-  --ball-org-bg:
-    radial-gradient(circle at 35% 32%,
-      rgba(255,200,120,0.85),
-      #d95f00 55%,
-      #7a2800);
+  /* 橙球 */
+  --ball-org-bg: radial-gradient(circle at 35% 32%, rgba(255,200,120,0.85), #d95f00 55%, #7a2800);
   --ball-org-border: rgba(255,150,60,0.4);
   --ball-org-text:   #fff;
-  --ball-org-glow:
-    rgba(220,100,0,0.55) 0px 0px 16px,
-    rgba(220,100,0,0.22) 0px 0px 36px;
+  --ball-org-glow: rgba(220,100,0,0.55) 0px 0px 16px, rgba(220,100,0,0.22) 0px 0px 36px;
 
-  /* 绿球 —— 翡翠绿 */
-  --ball-grn-bg:
-    radial-gradient(circle at 35% 32%,
-      rgba(130,240,170,0.85),
-      #1a9e4a 55%,
-      #0a4a20);
+  /* 绿球 */
+  --ball-grn-bg: radial-gradient(circle at 35% 32%, rgba(130,240,170,0.85), #1a9e4a 55%, #0a4a20);
   --ball-grn-border: rgba(80,210,120,0.4);
   --ball-grn-text:   #fff;
-  --ball-grn-glow:
-    rgba(20,160,70,0.55) 0px 0px 16px,
-    rgba(20,160,70,0.22) 0px 0px 36px;
+  --ball-grn-glow: rgba(20,160,70,0.55) 0px 0px 16px, rgba(20,160,70,0.22) 0px 0px 36px;
 }
 
-/* ── 手机端：切换为浅色主题 + 更大号球 ── */
 @media (max-width: 540px) {
   :root {
     --bg:        #f0ede8;
@@ -89,9 +66,9 @@
     --text:      #1a1a1a;
     --muted:     #777;
 
-    /* 球 - 手机浅色版：哑光实色 + 更大尺寸 + 更大字号 */
-    --ball-size:      36px;
-    --ball-font:      14px;
+    /* 手机浅色版：使用 clamp 保证极小屏幕下也能显示 */
+    --ball-size:      clamp(30px, 8.5vw, 36px);
+    --ball-font:      clamp(12px, 3.5vw, 14px);
     --ball-red-bg:    #d93025;
     --ball-red-text:  #fff;
     --ball-red-glow:  none;
@@ -123,17 +100,14 @@ body {
   transition: background 0.3s;
 }
 
-/* grain + scanlines：只在 PC 暗色下显示 */
 @media (min-width: 541px) {
   body::before {
-    content: '';
-    position: fixed; inset: 0;
+    content: ''; position: fixed; inset: 0;
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
     pointer-events: none; z-index: 0; opacity: 0.6;
   }
   body::after {
-    content: '';
-    position: fixed; inset: 0;
+    content: ''; position: fixed; inset: 0;
     background: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.08) 2px, rgba(0,0,0,0.08) 4px);
     pointer-events: none; z-index: 0;
   }
@@ -144,15 +118,13 @@ body {
 /* ── header ── */
 .header { text-align: center; margin-bottom: 36px; }
 .header-badge {
-  display: inline-block;
-  font-family: var(--mono); font-size: 11px;
+  display: inline-block; font-family: var(--mono); font-size: 11px;
   letter-spacing: 0.25em; color: var(--orange);
   border: 1px solid var(--orange); padding: 3px 12px;
   margin-bottom: 14px; text-transform: uppercase;
 }
 .header h1 {
-  font-family: var(--mono);
-  font-size: clamp(26px, 6vw, 46px);
+  font-family: var(--mono); font-size: clamp(26px, 6vw, 46px);
   font-weight: 400; letter-spacing: -0.02em;
   color: var(--text); line-height: 1.1;
 }
@@ -161,52 +133,36 @@ body {
 
 /* ── machine ── */
 .machine {
-  background: var(--surface);
-  border: 1px solid var(--border);
+  background: var(--surface); border: 1px solid var(--border);
   border-radius: 2px; overflow: hidden;
 }
 
-/* ── controls ── */
 .machine-top {
-  background: var(--panel);
-  border-bottom: 1px solid var(--border);
-  padding: 16px 20px;
-  display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
+  background: var(--panel); border-bottom: 1px solid var(--border);
+  padding: 16px 20px; display: flex; align-items: center; gap: 14px; flex-wrap: wrap;
 }
 
 @media (max-width: 540px) {
-  .machine-top {
-    padding: 14px 16px;
-    gap: 10px;
-  }
-  /* 摇号按钮在手机上独占一行 */
+  .machine-top { padding: 14px 16px; gap: 10px; }
   .btn-generate {
-    width: 100%;
-    margin-left: 0 !important;
-    padding: 13px 0 !important;
-    font-size: 15px !important;
-    letter-spacing: 0.2em !important;
-    border-radius: 4px !important;
+    width: 100%; margin-left: 0 !important; padding: 13px 0 !important;
+    font-size: 15px !important; letter-spacing: 0.2em !important; border-radius: 4px !important;
   }
 }
 
 .control-group { display: flex; align-items: center; gap: 10px; }
 .ctrl-label {
   font-family: var(--mono); font-size: 11px;
-  color: var(--muted); letter-spacing: 0.15em;
-  text-transform: uppercase; white-space: nowrap;
+  color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; white-space: nowrap;
 }
 
 .game-toggle {
-  display: flex; border: 1px solid var(--border);
-  border-radius: 2px; overflow: hidden;
+  display: flex; border: 1px solid var(--border); border-radius: 2px; overflow: hidden;
 }
 .game-toggle button {
-  font-family: var(--mono); font-size: 12px;
-  letter-spacing: 0.08em; padding: 7px 16px;
-  background: transparent; color: var(--muted);
-  border: none; cursor: pointer;
-  transition: background 0.15s, color 0.15s;
+  font-family: var(--mono); font-size: 12px; letter-spacing: 0.08em;
+  padding: 7px 16px; background: transparent; color: var(--muted);
+  border: none; cursor: pointer; transition: background 0.15s, color 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
 .game-toggle button.active { background: var(--orange); color: #fff; }
@@ -217,12 +173,11 @@ body {
 }
 
 .stepper {
-  display: flex; align-items: center;
-  border: 1px solid var(--border); border-radius: 2px; overflow: hidden;
+  display: flex; align-items: center; border: 1px solid var(--border); border-radius: 2px; overflow: hidden;
 }
 .stepper button {
-  width: 32px; height: 32px; background: var(--panel);
-  border: none; color: var(--muted); font-size: 18px; line-height: 1;
+  width: 32px; height: 32px; background: var(--panel); border: none;
+  color: var(--muted); font-size: 18px; line-height: 1;
   cursor: pointer; transition: color 0.15s, background 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
@@ -239,8 +194,7 @@ body {
 }
 
 .btn-generate {
-  margin-left: auto;
-  font-family: var(--mono); font-size: 13px;
+  margin-left: auto; font-family: var(--mono); font-size: 13px;
   letter-spacing: 0.12em; text-transform: uppercase;
   padding: 9px 28px; background: var(--orange); color: #fff;
   border: none; border-radius: 2px; cursor: pointer;
@@ -258,17 +212,13 @@ body {
   display: flex; align-items: center; justify-content: space-between;
   padding: 9px 20px; border-bottom: 1px solid var(--border);
 }
-.screen-title {
-  font-family: var(--mono); font-size: 11px;
-  color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase;
-}
+.screen-title { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.18em; text-transform: uppercase; }
 .screen-actions { display: flex; gap: 8px; }
 .btn-sm {
   font-family: var(--mono); font-size: 11px; letter-spacing: 0.1em;
   padding: 4px 12px; background: transparent; color: var(--muted);
   border: 1px solid var(--border); border-radius: 2px; cursor: pointer;
-  transition: color 0.15s, border-color 0.15s;
-  -webkit-tap-highlight-color: transparent;
+  transition: color 0.15s, border-color 0.15s; -webkit-tap-highlight-color: transparent;
 }
 .btn-sm:hover { color: var(--text); border-color: var(--dim); }
 
@@ -277,12 +227,9 @@ body {
   .btn-sm { font-size: 12px; padding: 6px 14px; }
 }
 
-/* ── results list ── */
 .results-list {
-  padding: 16px 20px 20px;
-  display: flex; flex-direction: column; gap: 10px;
-  max-height: 600px; overflow-y: auto;
-  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+  padding: 16px 20px 20px; display: flex; flex-direction: column; gap: 10px;
+  max-height: 600px; overflow-y: auto; scrollbar-width: thin; scrollbar-color: var(--border) transparent;
 }
 .results-list::-webkit-scrollbar { width: 3px; }
 .results-list::-webkit-scrollbar-thumb { background: var(--border); }
@@ -293,155 +240,75 @@ body {
 
 .empty-state { padding: 56px 24px; text-align: center; }
 .empty-icon  { font-size: 30px; margin-bottom: 10px; opacity: 0.25; }
-.empty-text  {
-  font-family: var(--mono); font-size: 12px;
-  color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase;
-}
+.empty-text  { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: 0.15em; text-transform: uppercase; }
 
 /* ── result row ── */
 .result-row {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 16px;
-  background: var(--panel);
-  border: 1px solid var(--border);
-  border-radius: 4px;
+  display: flex; align-items: center; gap: 12px; padding: 12px 16px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 4px;
   opacity: 0; transform: translateY(5px);
   animation: rowIn 0.22s ease forwards;
 }
 @keyframes rowIn { to { opacity: 1; transform: translateY(0); } }
 
-/* 手机：row 改为上下两行布局 */
 @media (max-width: 540px) {
-  .result-row {
-    flex-direction: column;
-    align-items: flex-start;
-    gap: 8px;
-    padding: 12px 14px;
-    border-radius: 6px;
-  }
-  .row-top {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    width: 100%;
-  }
-  /* 分隔线在手机上改为横向 */
-  .divider {
-    width: 100% !important;
-    height: 1px !important;
-  }
+  .result-row { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 14px; border-radius: 6px; }
+  .row-top { display: flex; align-items: center; gap: 8px; width: 100%; }
+  .divider { width: 100% !important; height: 1px !important; }
 }
 
-.row-idx {
-  font-family: var(--mono); font-size: 11px;
-  color: var(--dim); width: 30px; flex-shrink: 0;
-}
+.row-idx { font-family: var(--mono); font-size: 11px; color: var(--dim); width: 30px; flex-shrink: 0; }
+@media (max-width: 540px) { .row-idx { font-size: 12px; color: var(--muted); } }
 
-@media (max-width: 540px) {
-  .row-idx { font-size: 12px; color: var(--muted); }
+.row-section { 
+  display: flex; align-items: center; gap: 8px; 
+  max-width: 100%; /* 防止挤出边界 */
 }
+.section-tag { font-family: var(--mono); font-size: 10px; letter-spacing: 0.1em; color: var(--muted); width: 22px; flex-shrink: 0; }
+@media (max-width: 540px) { .section-tag { font-size: 12px; width: 24px; color: var(--muted); } }
 
-.row-section { display: flex; align-items: center; gap: 8px; }
-.section-tag {
-  font-family: var(--mono); font-size: 10px;
-  letter-spacing: 0.1em; color: var(--muted);
-  width: 22px; flex-shrink: 0;
-}
-
-@media (max-width: 540px) {
-  .section-tag { font-size: 12px; width: 24px; color: var(--muted); }
-}
-
-/* 球容器：不换行！用 nowrap 保证一行 */
+/* 横向防溢出优化 */
 .balls {
-  display: flex;
-  gap: 8px;
-  flex-wrap: nowrap;
+  display: flex; gap: 8px; flex-wrap: nowrap;
+}
+@media (max-width: 540px) {
+  .balls {
+    overflow-x: auto; 
+    padding-bottom: 2px;
+    scrollbar-width: none; /* Firefox 隐藏滚动条 */
+  }
+  .balls::-webkit-scrollbar { display: none; } /* Chrome 隐藏滚动条 */
 }
 
 /* ── 球 ── */
-/* 引入 Oswald 字体（参考来源的数字质感） */
-@import url('https://fonts.googleapis.com/css2?family=Oswald:wght@700&display=swap');
-
 .ball {
-  width:        var(--ball-size);
-  height:       var(--ball-size);
-  border-radius: 50%;
-  display:      flex;
-  align-items:  center;
-  justify-content: center;
-  font-family:  'Oswald', var(--mono);
-  font-size:    var(--ball-font);
-  font-weight:  var(--ball-weight, 700);
-  flex-shrink:  0;
-  cursor:       default;
-  position:     relative;
-  /* 弹出动画 */
+  width: var(--ball-size); height: var(--ball-size); border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Oswald', var(--mono); font-size: var(--ball-font); font-weight: var(--ball-weight, 700);
+  flex-shrink: 0; cursor: default; position: relative;
   animation: ballPop 0.45s cubic-bezier(0.34,1.56,0.64,1) both;
-  /* 悬停微缩放 */
-  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1),
-              box-shadow 0.2s ease;
+  transition: transform 0.2s cubic-bezier(0.34,1.56,0.64,1), box-shadow 0.2s ease;
 }
 .ball:hover { transform: scale(1.12); }
+@keyframes ballPop { from { transform: scale(0.35); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
-@keyframes ballPop {
-  from { transform: scale(0.35); opacity: 0; }
-  to   { transform: scale(1);    opacity: 1; }
-}
-
-/* 高光伪元素：每个球顶部一个白色弧形高光 */
 .ball::before {
-  content: '';
-  position: absolute;
-  top: 14%; left: 18%;
-  width: 38%; height: 22%;
-  background: rgba(255,255,255,0.28);
-  border-radius: 50%;
-  filter: blur(2px);
-  pointer-events: none;
+  content: ''; position: absolute; top: 14%; left: 18%; width: 38%; height: 22%;
+  background: rgba(255,255,255,0.28); border-radius: 50%; filter: blur(2px); pointer-events: none;
 }
+.ball-red { background: var(--ball-red-bg); color: var(--ball-red-text); border: 1.5px solid var(--ball-red-border); box-shadow: var(--ball-red-glow); }
+.ball-blue { background: var(--ball-blue-bg); color: var(--ball-blue-text); border: 1.5px solid var(--ball-blue-border); box-shadow: var(--ball-blue-glow); }
+.ball-orange { background: var(--ball-org-bg); color: var(--ball-org-text); border: 1.5px solid var(--ball-org-border); box-shadow: var(--ball-org-glow); }
+.ball-green { background: var(--ball-grn-bg); color: var(--ball-grn-text); border: 1.5px solid var(--ball-grn-border); box-shadow: var(--ball-grn-glow); }
 
-.ball-red {
-  background: var(--ball-red-bg);
-  color:      var(--ball-red-text);
-  border:     1.5px solid var(--ball-red-border);
-  box-shadow: var(--ball-red-glow);
-}
-.ball-blue {
-  background: var(--ball-blue-bg);
-  color:      var(--ball-blue-text);
-  border:     1.5px solid var(--ball-blue-border);
-  box-shadow: var(--ball-blue-glow);
-}
-.ball-orange {
-  background: var(--ball-org-bg);
-  color:      var(--ball-org-text);
-  border:     1.5px solid var(--ball-org-border);
-  box-shadow: var(--ball-org-glow);
-}
-.ball-green {
-  background: var(--ball-grn-bg);
-  color:      var(--ball-grn-text);
-  border:     1.5px solid var(--ball-grn-border);
-  box-shadow: var(--ball-grn-glow);
-}
-
-/* 手机：保持哑光实色，去除光晕和高光层 */
 @media (max-width: 540px) {
-  .ball {
-    font-family: var(--mono);
-    font-weight: 700;
-    letter-spacing: 0;
-    transition: none;
-  }
+  .ball { font-family: var(--mono); font-weight: 700; letter-spacing: 0; transition: none; }
   .ball:hover { transform: none; }
   .ball::before { display: none; }
-  .ball-red    { background: var(--ball-red-bg);  border: none; box-shadow: none; }
-  .ball-blue   { background: var(--ball-blue-bg); border: none; box-shadow: none; }
-  .ball-orange { background: var(--ball-org-bg);  border: none; box-shadow: none; }
-  .ball-green  { background: var(--ball-grn-bg);  border: none; box-shadow: none; }
+  .ball-red { background: var(--ball-red-bg); border: none; box-shadow: none; }
+  .ball-blue { background: var(--ball-blue-bg); border: none; box-shadow: none; }
+  .ball-orange { background: var(--ball-org-bg); border: none; box-shadow: none; }
+  .ball-green { background: var(--ball-grn-bg); border: none; box-shadow: none; }
 }
 
 .divider { width: 1px; height: 24px; background: var(--border); flex-shrink: 0; }
@@ -451,46 +318,32 @@ body {
   display: flex; align-items: center; justify-content: space-between;
   padding: 7px 20px; border-top: 1px solid var(--border); background: var(--panel);
 }
-.status-text {
-  font-family: var(--mono); font-size: 11px;
-  color: var(--muted); letter-spacing: 0.1em;
-}
-.status-dot {
-  width: 6px; height: 6px; border-radius: 50%;
-  background: var(--dim); transition: background 0.3s;
-}
+.status-text { font-family: var(--mono); font-size: 11px; color: var(--muted); letter-spacing: 0.1em; }
+.status-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--dim); transition: background 0.3s; }
 .status-dot.active { background: var(--green); box-shadow: 0 0 6px var(--green); }
 
-@media (max-width: 540px) {
-  .statusbar { padding: 8px 16px; }
-  .status-text { font-size: 12px; }
-}
+@media (max-width: 540px) { .statusbar { padding: 8px 16px; } .status-text { font-size: 12px; } }
 
 /* ── rolling overlay ── */
 .rolling-overlay {
-  position: absolute; inset: 0; background: var(--surface);
+  position: absolute; inset: 0; 
+  /* 优化半透明毛玻璃背景 */
+  background: color-mix(in srgb, var(--surface) 80%, transparent);
+  backdrop-filter: blur(3px);
+  -webkit-backdrop-filter: blur(3px);
   display: none; align-items: center; justify-content: center; z-index: 10;
 }
 .rolling-overlay.show { display: flex; }
 .roller-text {
-  font-family: var(--mono); font-size: 14px; color: var(--orange);
-  letter-spacing: 0.3em; text-transform: uppercase;
-  animation: blink 0.5s steps(1) infinite;
+  font-family: var(--mono); font-size: 16px; color: var(--orange);
+  letter-spacing: 0.3em; text-transform: uppercase; font-weight: 700;
+  animation: blink 0.5s steps(1) infinite; text-shadow: 0 2px 10px rgba(0,0,0,0.5);
 }
 @keyframes blink { 50% { opacity: 0; } }
 
 /* ── footer ── */
-.footer {
-  margin-top: 24px; text-align: center;
-  font-family: var(--mono); font-size: 11px;
-  color: var(--dim); letter-spacing: 0.1em;
-}
-
-@media (max-width: 540px) {
-  body { padding: 28px 12px 48px; }
-  .header { margin-bottom: 24px; }
-  .header h1 { font-size: 32px; }
-}
+.footer { margin-top: 24px; text-align: center; font-family: var(--mono); font-size: 11px; color: var(--dim); letter-spacing: 0.1em; }
+@media (max-width: 540px) { body { padding: 28px 12px 48px; } .header { margin-bottom: 24px; } .header h1 { font-size: 32px; } }
 </style>
 </head>
 <body>
@@ -513,17 +366,17 @@ body {
       <div class="control-group">
         <span class="ctrl-label">注数</span>
         <div class="stepper">
-          <button data-delta="-1">−</button>
+          <button data-delta="-1" aria-label="减少注数">−</button>
           <div class="stepper-val">5</div>
-          <button data-delta="1">+</button>
+          <button data-delta="1" aria-label="增加注数">+</button>
         </div>
       </div>
-      <button class="btn-generate">▶ 摇号</button>
+      <button class="btn-generate">▶ 摇号 (Enter)</button>
     </div>
 
     <div class="machine-screen">
       <div class="rolling-overlay" id="rolling">
-        <span class="roller-text">rolling...</span>
+        <span class="roller-text">ROLLING</span>
       </div>
       <div class="screen-header">
         <span class="screen-title" id="screen-title">等待摇号</span>
@@ -540,7 +393,7 @@ body {
       </div>
     </div>
 
-    <div class="statusbar">
+    <div class="statusbar" aria-live="polite">
       <span class="status-text" id="status-text">READY</span>
       <div class="status-dot" id="status-dot"></div>
     </div>
@@ -567,7 +420,17 @@ const GAMES = {
   },
 };
 
-const state = { game: 'ssq', sets: 5, rolling: false };
+// 状态管理：增加 currentResults 存储实际数据
+const state = { 
+  game: 'ssq', 
+  sets: 5, 
+  rolling: false, 
+  currentResults: [],
+};
+
+// 内部实现细节，与业务状态分离
+let rollIntervalId = null;
+
 const MIN_SETS = 1, MAX_SETS = 20;
 
 const els = {
@@ -609,24 +472,23 @@ function generateTicket(gameKey) {
 // ── DOM 构建 ─────────────────────────────────────────────────
 function pad(n) { return String(n).padStart(2, '0'); }
 
-function makeBall(n, cls, delay) {
+function makeBall(n, cls, delay, noAnim = false) {
   const el = document.createElement('span');
   el.className = `ball ${cls}`;
   el.textContent = pad(n);
-  el.style.animationDelay = delay + 'ms';
+  if (!noAnim) el.style.animationDelay = delay + 'ms';
   return el;
 }
 
 const isMobile = () => window.innerWidth <= 540;
 
-function makeRow(index, ticket, gameKey) {
+function makeRow(index, ticket, gameKey, noAnim = false) {
   const row = document.createElement('div');
   row.className = 'result-row';
-  row.style.animationDelay = (index * 55) + 'ms';
-
+  if (!noAnim) row.style.animationDelay = (index * 55) + 'ms';
+  
   const mobile = isMobile();
 
-  // 手机：序号和标题放在 row-top 容器里
   if (mobile) {
     const top = document.createElement('div');
     top.className = 'row-top';
@@ -660,13 +522,12 @@ function makeRow(index, ticket, gameKey) {
     const ballsWrap = document.createElement('div');
     ballsWrap.className = 'balls';
     ticket[sec.key].forEach((n, bi) => {
-      ballsWrap.appendChild(makeBall(n, sec.ballClass, (ballOffset + bi) * 38));
+      ballsWrap.appendChild(makeBall(n, sec.ballClass, (ballOffset + bi) * 38, noAnim));
     });
     ballOffset += ticket[sec.key].length;
     wrap.appendChild(ballsWrap);
     row.appendChild(wrap);
   });
-
   return row;
 }
 
@@ -683,37 +544,54 @@ function showEmpty() {
       <div class="empty-text">按下摇号开始</div>
     </div>`;
   els.screenTitle.textContent = '等待摇号';
+  state.currentResults = []; // 清空状态
 }
 
-function showLoading() {
+function renderResults(gameKey, resultsData, noAnim = false) {
+  els.results.innerHTML = '';
+  const frag = document.createDocumentFragment();
+  resultsData.forEach((ticket, i) => {
+    frag.appendChild(makeRow(i, ticket, gameKey, noAnim));
+  });
+  els.results.appendChild(frag);
+  els.results.scrollTop = 0;
+  els.screenTitle.textContent = `${GAMES[gameKey].name} · ${resultsData.length} 注`;
+}
+
+// 摇号占位动画特效
+function startRollingEffect() {
   els.rolling.classList.add('show');
   els.btnGenerate.disabled = true;
   setStatus('ROLLING...', true);
+
+  // 1. 先生成一次假数据渲染出来（关闭动画）
+  const fakeData = Array.from({ length: state.sets }, () => generateTicket(state.game));
+  renderResults(state.game, fakeData, true);
+  
+  // 2. 让 DOM 里的数字开始快速跳动
+  const balls = els.results.querySelectorAll('.ball');
+  rollIntervalId = setInterval(() => {
+    balls.forEach(b => {
+      b.textContent = pad(Math.floor(Math.random() * 35) + 1);
+    });
+  }, 40);
 }
 
-function hideLoading() {
+function stopRollingEffect() {
+  clearInterval(rollIntervalId);
+  rollIntervalId = null;
   els.rolling.classList.remove('show');
   els.btnGenerate.disabled = false;
 }
 
-function buildFragment(gameKey, sets) {
-  const frag = document.createDocumentFragment();
-  for (let i = 0; i < sets; i++) {
-    frag.appendChild(makeRow(i, generateTicket(gameKey), gameKey));
-  }
-  return frag;
-}
-
-function renderResults(gameKey, sets) {
-  els.results.innerHTML = '';
-  els.results.appendChild(buildFragment(gameKey, sets));
-  els.results.scrollTop = 0;
-  els.screenTitle.textContent = `${GAMES[gameKey].name} · ${sets} 注`;
-}
-
 function finishGeneration() {
   const { game, sets } = state;
-  renderResults(game, sets);
+  // 核心：将生成的最终数据存入状态管理
+  state.currentResults = Array.from({ length: sets }, () => generateTicket(game));
+  
+  // 根据状态渲染（开启进场动画）
+  renderResults(game, state.currentResults);
+  
   setStatus(`OK · ${sets} SETS · ${GAMES[game].name}`, true);
   setTimeout(() => setStatus(`READY · LAST: ${GAMES[game].name} ${sets}注`, false), 2000);
 }
@@ -721,32 +599,36 @@ function finishGeneration() {
 function generate() {
   if (state.rolling) return;
   state.rolling = true;
-  showLoading();
+  startRollingEffect();
+  
   setTimeout(() => {
-    hideLoading();
+    stopRollingEffect();
     finishGeneration();
     state.rolling = false;
-  }, 600);
+  }, 650);
 }
 
-// ── 复制（clipboard + textarea fallback）────────────────────
+// ── 复制（数据驱动）────────────────────────────────────────
 function copyResults() {
-  const rows = els.results.querySelectorAll('.result-row');
-  if (!rows.length) { setStatus('NO DATA', false); return; }
+  if (!state.currentResults.length) { setStatus('NO DATA', false); return; }
 
-  const gameName = GAMES[state.game].name;
-  const pivot    = GAMES[state.game].sections[0].pick;
-  const lines    = [gameName];
-  rows.forEach((row, i) => {
-    const balls = [...row.querySelectorAll('.ball')].map(b => b.textContent);
-    lines.push(`第${pad(i + 1)}注  ${balls.slice(0, pivot).join(' ')}  |  ${balls.slice(pivot).join(' ')}`);
+  const gameConf = GAMES[state.game];
+  const lines = [gameConf.name];
+  const [sec1, sec2] = gameConf.sections;
+
+  // 遍历内存中的 state 数据，而不是去反查 DOM
+  state.currentResults.forEach((ticket, i) => {
+    const s1Str = ticket[sec1.key].map(pad).join(' ');
+    const s2Str = ticket[sec2.key].map(pad).join(' ');
+    lines.push(`第${pad(i + 1)}注  ${s1Str}  |  ${s2Str}`);
   });
+
   const text = lines.join('\n');
 
   if (navigator.clipboard) {
     navigator.clipboard.writeText(text)
       .then(()  => setStatus('COPIED ✓', true))
-      .catch(()  => fallbackCopy(text));
+      .catch(() => fallbackCopy(text));
   } else {
     fallbackCopy(text);
   }
@@ -796,6 +678,15 @@ document.querySelector('.screen-actions').addEventListener('click', e => {
   const btn = e.target.closest('[data-action]');
   if (!btn) return;
   ({ copy: copyResults, clear: clearResults })[btn.dataset.action]?.();
+});
+
+// 支持键盘快捷键触发摇号
+// Enter 键触发摇号；Space 保留给浏览器默认行为（按钮点击），不额外处理
+document.addEventListener('keydown', e => {
+  if (e.code === 'Enter' && !state.rolling) {
+    e.preventDefault();
+    generate();
+  }
 });
 </script>
 </body>
