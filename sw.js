@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 
 const PRECACHE_NAME = `lottery-precache-${CACHE_VERSION}`;
 const RUNTIME_NAME  = `lottery-runtime-${CACHE_VERSION}`;
@@ -22,8 +22,8 @@ const FONT_MAX_AGE = 30 * 24 * 3600;
 self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(PRECACHE_NAME)
-      .then(cache => cache.addAll(PRECACHE_URLS))
-      .then(() => self.skipWaiting())
+      。then(cache => cache.addAll(PRECACHE_URLS))
+      。then(() => self.skipWaiting())
   );
 });
 
