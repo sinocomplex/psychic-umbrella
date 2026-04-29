@@ -5,64 +5,49 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="theme-color" content="#f2f2f7" media="(max-width: 540px)">
 <meta name="theme-color" content="#0b0b0c" media="(min-width: 541px)">
+<!-- ↓ PWA：manifest + iOS 支持 ↓ -->
+<link rel="manifest" href="manifest.json">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="摇号机">
+<!-- ↑ PWA end ↑ -->
 <title>摇号机 · 彩票生成器</title>
 <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;700&family=Oswald:wght@700&display=swap" rel="stylesheet">
-<link rel="manifest" href="/manifest.json">
-<meta name="theme-color" content="#ff7a1a">
+<!-- ↓ 预连接字体域名，SW 首次安装时加速缓存 ↓ -->
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <style>
 /* ═══════════════════════════════════════════════
    设计系统
    PC：苹果级暗色  /  手机：同色系浅色
    ═══════════════════════════════════════════════ */
 :root {
-  /* 背景层级 */
   --bg:      #0b0b0c;
   --surface: #121214;
   --panel:   #18181b;
-
-  /* 边框 */
   --border:  #2a2a2e;
   --divider: #2f2f33;
-
-  /* 文字 */
   --text:           #f5f5f7;
   --text-secondary: #c7c7cc;
   --muted:          #8e8e93;
-
-  /* 强调色 */
   --accent:      #ff7a1a;
   --accent-soft: #ff9a3c;
-
-  /* 成功 */
   --green: #32d74b;
-
-  /* 字体 */
   --sans: -apple-system, BlinkMacSystemFont, "Inter", "SF Pro Text", "Noto Sans SC", sans-serif;
   --mono: "JetBrains Mono", "SF Mono", "Share Tech Mono", monospace;
-
-  /* 球 — PC 三段渐变 + 双层光晕 */
   --ball-size:   50px;
   --ball-font:   18px;
   --ball-weight: 700;
-
   --ball-red-bg:     radial-gradient(circle at 35% 32%, rgba(255,160,140,0.85), #e03020 55%, #8b0e0e);
   --ball-red-border: rgba(230,100,80,0.4);
   --ball-red-glow:   rgba(220,50,30,0.5) 0 0 14px, rgba(220,50,30,0.2) 0 0 32px;
-
   --ball-blue-bg:     radial-gradient(circle at 35% 32%, rgba(140,195,255,0.85), #1a6fd4 55%, #0a2e7a);
   --ball-blue-border: rgba(100,170,255,0.4);
   --ball-blue-glow:   rgba(30,100,220,0.5) 0 0 14px, rgba(30,100,220,0.2) 0 0 32px;
-
-  --ball-org-bg:     radial-gradient(circle at 35% 32%, rgba(255,200,120,0.85), #d95f00 55%, #7a2800);
-  --ball-org-border: rgba(255,150,60,0.4);
-  --ball-org-glow:   rgba(220,100,0,0.5) 0 0 14px, rgba(220,100,0,0.2) 0 0 32px;
-
-  --ball-grn-bg:     radial-gradient(circle at 35% 32%, rgba(130,240,170,0.85), #1a9e4a 55%, #0a4a20);
-  --ball-grn-border: rgba(80,210,120,0.4);
-  --ball-grn-glow:   rgba(20,160,70,0.5) 0 0 14px, rgba(20,160,70,0.2) 0 0 32px;
+  --ball-back-bg:     radial-gradient(circle at 35% 32%, rgba(255,240,140,0.90), #d4a800 55%, #7a5c00);
+  --ball-back-border: rgba(255,210,60,0.4);
+  --ball-back-glow:   rgba(210,170,0,0.5) 0 0 14px, rgba(210,170,0,0.2) 0 0 32px;
 }
 
-/* ── 手机：浅色主题覆盖 ── */
 @media (max-width: 540px) {
   :root {
     --bg:             #f2f2f7;
@@ -76,26 +61,17 @@
     --accent:         #e05800;
     --accent-soft:    #ff7a20;
     --green:          #1a9e4a;
-
-    /* 球 — 手机哑光纯色，clamp 防极小屏溢出 */
     --ball-size:   clamp(30px, 8.5vw, 36px);
     --ball-font:   clamp(12px, 3.5vw, 14px);
-
     --ball-red-bg:     #d93025;
     --ball-red-border: transparent;
     --ball-red-glow:   none;
-
     --ball-blue-bg:     #1a6fd4;
     --ball-blue-border: transparent;
     --ball-blue-glow:   none;
-
-    --ball-org-bg:     #d95f00;
-    --ball-org-border: transparent;
-    --ball-org-glow:   none;
-
-    --ball-grn-bg:     #1a8c3e;
-    --ball-grn-border: transparent;
-    --ball-grn-glow:   none;
+    --ball-back-bg:     #c99a00;
+    --ball-back-border: transparent;
+    --ball-back-glow:   none;
   }
 }
 
@@ -119,7 +95,6 @@ body {
   overflow-x: hidden;
 }
 
-/* grain + scanlines：仅 PC 暗色下渲染 */
 @media (min-width: 541px) {
   body::before {
     content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
@@ -176,7 +151,6 @@ body {
     inset 0 1px 0 rgba(255,255,255,0.05);
 }
 
-/* ── 顶部控制 ── */
 .machine-top {
   display: flex;
   align-items: center;
@@ -194,7 +168,6 @@ body {
   white-space: nowrap;
 }
 
-/* 玩法切换 */
 .game-toggle {
   display: flex;
   border-radius: 8px;
@@ -215,7 +188,6 @@ body {
 .game-toggle button.active { background: var(--accent); color: #fff; }
 .game-toggle button:not(.active):hover { background: rgba(255,255,255,0.06); color: var(--text); }
 
-/* 步进器 */
 .stepper {
   display: flex;
   align-items: center;
@@ -240,10 +212,46 @@ body {
   text-align: center;
   font-size: 14px;
   color: var(--text);
-  user-select: none;
+  background: transparent;
+  border: none;
+  outline: none;
+  -moz-appearance: textfield;
+  cursor: text;
 }
+.stepper-val::-webkit-outer-spin-button,
+.stepper-val::-webkit-inner-spin-button { -webkit-appearance: none; }
 
-/* 摇号按钮 */
+.quick-sets { display: flex; gap: 4px; }
+.quick-sets button {
+  width: 28px; height: 28px;
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: transparent;
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+.quick-sets button:hover { color: var(--accent); border-color: var(--accent); }
+.quick-sets button.qs-active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+.kbd-hint {
+  display: inline-block;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 400;
+  padding: 1px 5px;
+  border-radius: 4px;
+  border: 1px solid rgba(255,255,255,0.25);
+  opacity: 0.65;
+  vertical-align: middle;
+  margin-left: 4px;
+  letter-spacing: 0;
+}
+@media (max-width: 540px) { .kbd-hint { display: none; } }
+
 .btn-generate {
   margin-left: auto;
   padding: 10px 26px;
@@ -261,11 +269,9 @@ body {
 .btn-generate:active  { transform: scale(0.97); }
 .btn-generate:disabled { opacity: 0.4; cursor: not-allowed; transform: none; }
 
-/* ── 手机覆盖 ── */
 @media (max-width: 540px) {
   body { padding: 28px 12px 48px; }
   .header { margin-bottom: 24px; }
-
   .machine-top { padding: 14px 16px; gap: 10px; }
   .btn-generate {
     width: 100%; margin-left: 0;
@@ -327,12 +333,10 @@ body {
   .results-list { padding: 12px; gap: 6px; max-height: none; }
 }
 
-/* 空状态 */
 .empty-state { padding: 60px 24px; text-align: center; }
 .empty-icon  { font-size: 32px; margin-bottom: 12px; opacity: 0.4; }
 .empty-text  { font-size: 14px; color: var(--text-secondary); }
 
-/* 结果行 */
 .result-row {
   display: flex; align-items: center; gap: 12px;
   padding: 12px 14px;
@@ -344,7 +348,9 @@ body {
 }
 @keyframes rowIn { to { opacity: 1; transform: translateY(0); } }
 
-/* 手机竖排 */
+/* 桌面端 row-top "消失"，子元素直接参与父级 flex */
+.row-top { display: contents; }
+
 @media (max-width: 540px) {
   .result-row { flex-direction: column; align-items: flex-start; gap: 8px; padding: 12px 14px; }
   .row-top    { display: flex; align-items: center; gap: 8px; width: 100%; }
@@ -398,7 +404,11 @@ body {
   to   { transform: scale(1);    opacity: 1; }
 }
 
-/* 顶部高光伪元素 */
+@keyframes ballSettle {
+  0%   { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
 .ball::before {
   content: ''; position: absolute;
   top: 13%; left: 17%; width: 38%; height: 22%;
@@ -407,20 +417,25 @@ body {
   pointer-events: none;
 }
 
-.ball-red    { background: var(--ball-red-bg);  border: 1.5px solid var(--ball-red-border);  box-shadow: var(--ball-red-glow); }
-.ball-blue   { background: var(--ball-blue-bg); border: 1.5px solid var(--ball-blue-border); box-shadow: var(--ball-blue-glow); }
-.ball-orange { background: var(--ball-org-bg);  border: 1.5px solid var(--ball-org-border);  box-shadow: var(--ball-org-glow); }
-.ball-green  { background: var(--ball-grn-bg);  border: 1.5px solid var(--ball-grn-border);  box-shadow: var(--ball-grn-glow); }
+.ball-red    { background: var(--ball-red-bg);    border: 1.5px solid var(--ball-red-border);   box-shadow: var(--ball-red-glow); }
+.ball-blue   { background: var(--ball-blue-bg);   border: 1.5px solid var(--ball-blue-border);  box-shadow: var(--ball-blue-glow); }
+.ball-front  { background: var(--ball-blue-bg);   border: 1.5px solid var(--ball-blue-border);  box-shadow: var(--ball-blue-glow); }
+.ball-back   { background: var(--ball-back-bg);   border: 1.5px solid var(--ball-back-border);  box-shadow: var(--ball-back-glow); }
 
-/* 手机：哑光，无光晕，无高光伪元素 */
 @media (max-width: 540px) {
   .ball { transition: none; }
   .ball:hover  { transform: none; }
   .ball::before { display: none; }
-  .ball-red    { border: none; box-shadow: none; }
-  .ball-blue   { border: none; box-shadow: none; }
-  .ball-orange { border: none; box-shadow: none; }
-  .ball-green  { border: none; box-shadow: none; }
+  .ball-red, .ball-blue, .ball-front, .ball-back { border: none; box-shadow: none; }
+}
+
+/* ═══════════════════════════════════════════════
+   减少动态效果
+   ═══════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+  .ball        { animation: none !important; opacity: 1; transform: none; }
+  .result-row  { animation: none !important; opacity: 1; transform: none; }
+  .roller-text { animation: none !important; opacity: 1; }
 }
 
 /* ═══════════════════════════════════════════════
@@ -445,6 +460,8 @@ body {
    ═══════════════════════════════════════════════ */
 .rolling-overlay {
   position: absolute; inset: 0;
+  /* 回退：不支持 color-mix 时使用通用半透明黑 */
+  background: rgba(0, 0, 0, 0.35);
   background: color-mix(in srgb, var(--surface) 82%, transparent);
   backdrop-filter: blur(4px);
   -webkit-backdrop-filter: blur(4px);
@@ -473,6 +490,97 @@ body {
   font-size: 13px;
   color: var(--muted);
 }
+
+/* ═══════════════════════════════════════════════
+   History
+   ═══════════════════════════════════════════════ */
+.history-section {
+  margin-top: 14px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  overflow: hidden;
+  box-shadow: 0 12px 36px rgba(0,0,0,0.45), inset 0 1px 0 rgba(255,255,255,0.05);
+}
+.history-header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 10px 20px;
+  border-bottom: 1px solid var(--divider);
+}
+.history-title {
+  font-size: 13px; font-weight: 600;
+  color: var(--text-secondary);
+  display: flex; align-items: center; gap: 8px;
+}
+.history-count {
+  font-size: 11px; color: var(--muted);
+  font-family: var(--mono);
+}
+.history-actions { display: flex; align-items: center; gap: 8px; }
+
+.history-list {
+  padding: 12px 16px;
+  display: flex; flex-direction: column; gap: 10px;
+  max-height: 380px; overflow-y: auto;
+  scrollbar-width: thin; scrollbar-color: var(--border) transparent;
+}
+.history-list::-webkit-scrollbar { width: 3px; }
+.history-list::-webkit-scrollbar-thumb { background: var(--border); }
+
+.hist-empty { padding: 32px 0; text-align: center; font-size: 13px; color: var(--muted); }
+
+.hist-item {
+  padding: 10px 12px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+}
+.hist-item-header {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 8px;
+}
+.hist-game {
+  font-size: 11px; font-weight: 700;
+  color: var(--accent); letter-spacing: 0.04em;
+}
+.hist-meta { font-size: 11px; color: var(--muted); font-family: var(--mono); }
+.hist-item-actions { display: flex; gap: 6px; }
+
+.hist-row {
+  display: flex; align-items: center; gap: 6px;
+  padding: 3px 0;
+}
+.hist-row + .hist-row { border-top: 1px solid var(--divider); padding-top: 5px; margin-top: 2px; }
+
+.hist-idx {
+  font-family: var(--mono); font-size: 10px;
+  color: var(--muted); width: 20px; flex-shrink: 0;
+}
+.hist-sep { font-size: 10px; color: var(--divider); padding: 0 2px; }
+.hist-nums { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+.hist-num {
+  font-family: var(--mono);
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--text);
+  letter-spacing: 0.02em;
+  line-height: 1;
+}
+.hist-num.hist-num-red                              { color: #e03020; }
+.hist-num.hist-num-blue,
+.hist-num.hist-num-front                            { color: #1a6fd4; }
+.hist-num.hist-num-back                             { color: #c99a00; }
+.hist-emoji {
+  font-size: 11px;
+  line-height: 1;
+  margin-right: 1px;
+}
+
+@media (max-width: 540px) {
+  .history-header { padding: 10px 16px; }
+  .history-list   { padding: 10px 12px; max-height: none; }
+  .hist-num { font-size: 14px; }
+}
 </style>
 </head>
 <body>
@@ -480,10 +588,10 @@ body {
   <header class="header">
     <div class="header-badge">CRYPTO RANDOM ENGINE</div>
     <h1>摇号<span>机</span></h1>
-    <p class="header-sub">基于 crypto.getRandomValues · 密码学级随机</p>
+    <p class="header-sub">基于 crypto.getRandomValues · 高质量随机数</p>
   </header>
 
-  <div class="machine">
+  <div class="machine" id="machine">
     <div class="machine-top">
       <div class="control-group">
         <span class="ctrl-label">玩法</span>
@@ -496,11 +604,17 @@ body {
         <span class="ctrl-label">注数</span>
         <div class="stepper">
           <button data-delta="-1" aria-label="减少注数">−</button>
-          <div class="stepper-val">5</div>
+          <input type="number" class="stepper-val" min="1" max="20" value="5" aria-label="注数" />
           <button data-delta="1" aria-label="增加注数">+</button>
         </div>
+        <div class="quick-sets">
+          <button data-sets="1">1</button>
+          <button data-sets="5" class="qs-active">5</button>
+          <button data-sets="10">10</button>
+          <button data-sets="20">20</button>
+        </div>
       </div>
-      <button class="btn-generate">▶ 摇号 (Enter)</button>
+      <button class="btn-generate">▶ 摇号<kbd class="kbd-hint">Enter</kbd></button>
     </div>
 
     <div class="machine-screen">
@@ -516,7 +630,7 @@ body {
       </div>
       <div class="results-list" id="results">
         <div class="empty-state">
-          <div class="empty-icon">⟳</div>
+          <div class="empty-icon" aria-hidden="true">⟳</div>
           <div class="empty-text">按下摇号开始</div>
         </div>
       </div>
@@ -528,7 +642,22 @@ body {
     </div>
   </div>
 
-  <p class="footer">每注中奖概率均等 · 仅供娱乐</p>
+  <p class="footer">本工具仅为娱乐，不构成购彩建议，彩票开奖结果随机，理性购彩</p>
+
+  <section class="history-section" id="history-section">
+    <div class="history-header">
+      <span class="history-title">
+        历史记录
+        <span class="history-count" id="history-count"></span>
+      </span>
+      <div class="history-actions">
+        <button class="btn-sm" id="btn-clear-history">清空</button>
+      </div>
+    </div>
+    <div class="history-list" id="history-list">
+      <div class="hist-empty">暂无历史记录</div>
+    </div>
+  </section>
 </div>
 
 <script>
@@ -543,20 +672,18 @@ const GAMES = {
   dlt: {
     name: '大乐透',
     sections: [
-      { key: 'front', label: '前', total: 35, pick: 5, ballClass: 'ball-orange' },
-      { key: 'back',  label: '后', total: 12, pick: 2, ballClass: 'ball-green'  },
+      { key: 'front', label: '前', total: 35, pick: 5, ballClass: 'ball-front' },
+      { key: 'back',  label: '后', total: 12, pick: 2, ballClass: 'ball-back'  },
     ],
   },
 };
 
-// 配置常量集中管理
 const CONFIG = {
   MIN_SETS:  1,
   MAX_SETS:  20,
   ROLL_TIME: 650,
 };
 
-// 状态分层：data = 业务数据，ui = 界面状态
 const state = {
   data: {
     game:    'ssq',
@@ -568,31 +695,62 @@ const state = {
   },
 };
 
-// 内部实现细节，与业务状态分离
-let rollIntervalId = null;
+let rollTimerId    = null;
+let rollGeneration = 0;
+
+// 缓存减少动态效果偏好，避免高频查询
+const prefersReduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
 
 const els = {
-  results:     document.getElementById('results'),
-  statusText:  document.getElementById('status-text'),
-  statusDot:   document.getElementById('status-dot'),
-  screenTitle: document.getElementById('screen-title'),
-  rolling:     document.getElementById('rolling'),
-  setsVal:     document.querySelector('.stepper-val'),
-  btnGenerate: document.querySelector('.btn-generate'),
+  results:      document.getElementById('results'),
+  statusText:   document.getElementById('status-text'),
+  statusDot:    document.getElementById('status-dot'),
+  screenTitle:  document.getElementById('screen-title'),
+  rolling:      document.getElementById('rolling'),
+  setsVal:      document.querySelector('.stepper-val'),
+  btnGenerate:  document.querySelector('.btn-generate'),
+  historyList:  document.getElementById('history-list'),
+  historyCount: document.getElementById('history-count'),
+  machine:      document.getElementById('machine'),
 };
 
+// ── 快捷注数 ─────────────────────────────────────────────────
+function updateQuickSets() {
+  document.querySelectorAll('.quick-sets [data-sets]').forEach(b => {
+    b.classList.toggle('qs-active', Number(b.dataset.sets) === state.data.sets);
+  });
+}
+
+function parseSetsInput(raw) {
+  const n = parseInt(raw, 10);
+  if (!n || n <= 0) return CONFIG.MIN_SETS;
+  return Math.min(CONFIG.MAX_SETS, Math.max(CONFIG.MIN_SETS, n));
+}
+
+function setSets(v) {
+  state.data.sets = parseSetsInput(v);
+  els.setsVal.value = state.data.sets;
+  updateQuickSets();
+}
+
 // ── 随机（无模偏差）──────────────────────────────────────────
+const randBuf = new Uint32Array(1);
+
 function randBelow(n) {
   const limit = Math.floor(0x100000000 / n) * n;
-  const arr = new Uint32Array(1);
   let v;
-  do { crypto.getRandomValues(arr); v = arr[0]; } while (v >= limit);
+  do {
+    crypto.getRandomValues(randBuf);
+    v = randBuf[0];
+  } while (v >= limit);
   return v % n;
 }
 
 function sample(total, k) {
   const pool = Array.from({ length: total }, (_, i) => i + 1);
-  for (let i = total - 1; i >= total - k; i--) {
+  for (let i = pool.length - 1; i > pool.length - 1 - k; i--) {
     const j = randBelow(i + 1);
     [pool[i], pool[j]] = [pool[j], pool[i]];
   }
@@ -614,34 +772,24 @@ function makeBall(n, cls, delay, noAnim = false, total = 35) {
   const el = document.createElement('span');
   el.className = `ball ${cls}`;
   el.textContent = pad(n);
-  el.dataset.total = total;   // 记录该球所属区段的最大值，供滚动动画使用
+  el._max = total;
   if (!noAnim) el.style.animationDelay = delay + 'ms';
   return el;
 }
-
-const isMobile = () => window.innerWidth <= 540;
 
 function makeRow(index, ticket, gameKey, noAnim = false) {
   const row = document.createElement('div');
   row.className = 'result-row';
   if (!noAnim) row.style.animationDelay = (index * 55) + 'ms';
-  
-  const mobile = isMobile();
 
-  if (mobile) {
-    const top = document.createElement('div');
-    top.className = 'row-top';
-    const idx = document.createElement('span');
-    idx.className = 'row-idx';
-    idx.textContent = `#${pad(index + 1)}`;
-    top.appendChild(idx);
-    row.appendChild(top);
-  } else {
-    const idx = document.createElement('span');
-    idx.className = 'row-idx';
-    idx.textContent = pad(index + 1);
-    row.appendChild(idx);
-  }
+  // 统一生成 row-top 包裹序号；桌面端 display:contents 使其"消失"
+  const top = document.createElement('div');
+  top.className = 'row-top';
+  const idx = document.createElement('span');
+  idx.className = 'row-idx';
+  idx.textContent = `#${pad(index + 1)}`;
+  top.appendChild(idx);
+  row.appendChild(top);
 
   let ballOffset = 0;
   GAMES[gameKey].sections.forEach((sec, si) => {
@@ -679,61 +827,20 @@ function setStatus(msg, active = false) {
 function showEmpty() {
   els.results.innerHTML = `
     <div class="empty-state">
-      <div class="empty-icon">⟳</div>
+      <div class="empty-icon" aria-hidden="true">⟳</div>
       <div class="empty-text">按下摇号开始</div>
     </div>`;
   els.screenTitle.textContent = '等待摇号';
   state.data.results = [];
 }
 
-// ── 数据层：只管生成，不碰 DOM ───────────────────────────────
-
-// 生成本次所有注的最终数据，写入 state，返回结果供外部使用
+// ── 数据层 ───────────────────────────────────────────────────
 function generateData() {
-  const { game, sets } = state.data;
-  state.data.results = Array.from({ length: sets }, () => generateTicket(game));
-  return state.data.results;
-}
-
-// 生成一套占位用的随机假数据（结构与真实数据相同，只是数字随机）
-function generatePlaceholderData() {
   const { game, sets } = state.data;
   return Array.from({ length: sets }, () => generateTicket(game));
 }
 
-// ── 动画层：只管 DOM 过渡效果，不生成业务数据 ────────────────
-
-// 显示 overlay + 禁用按钮 + 启动球面数字滚动
-function animateStart() {
-  els.rolling.classList.add('show');
-  els.btnGenerate.disabled = true;
-  setStatus('ROLLING...', true);
-
-  // 用占位数据撑起球的 DOM 结构（noAnim=true 跳过进场动画）
-  const placeholder = generatePlaceholderData();
-  render(state.data.game, placeholder, { noAnim: true });
-
-  // 每隔 40ms 按各球自己的范围随机刷新数字
-  const balls = els.results.querySelectorAll('.ball');
-  rollIntervalId = setInterval(() => {
-    balls.forEach(b => {
-      const total = parseInt(b.dataset.total, 10);
-      b.textContent = pad(Math.floor(Math.random() * total) + 1);
-    });
-  }, 40);
-}
-
-// 停止滚动、隐藏 overlay、恢复按钮
-function animateStop() {
-  clearInterval(rollIntervalId);
-  rollIntervalId = null;
-  els.rolling.classList.remove('show');
-  els.btnGenerate.disabled = false;
-}
-
-// ── 渲染层：只管把数据画到屏幕上 ────────────────────────────
-
-// options: { noAnim = false }
+// ── 渲染层 ───────────────────────────────────────────────────
 function render(gameKey, results, { noAnim = false } = {}) {
   els.results.innerHTML = '';
   const frag = document.createDocumentFragment();
@@ -745,40 +852,124 @@ function render(gameKey, results, { noAnim = false } = {}) {
   els.screenTitle.textContent = `${GAMES[gameKey].name} · ${results.length} 注`;
 }
 
-// ── 控制层：编排数据 / 动画 / 渲染的时序 ────────────────────
+// ── 控制层 ───────────────────────────────────────────────────
 
-function generate() {
+function resetRollingState() {
+  clearTimeout(rollTimerId);
+  rollTimerId = null;
+  els.rolling.classList.remove('show');
+  els.btnGenerate.disabled = false;
+  state.ui.rolling = false;
+}
+
+async function runRollingAnimation(gen, balls) {
+  const phases = [
+    { speed:  40, duration: 520 },
+    { speed: 120, duration: 200 },
+    { speed: 260, duration: 300 },
+  ];
+  let currentSpeed = phases[0].speed;
+
+  function tick() {
+    balls.forEach(b => { b.textContent = pad(randBelow(b._max) + 1); });
+    rollTimerId = setTimeout(tick, currentSpeed);
+  }
+  rollTimerId = setTimeout(tick, currentSpeed);
+
+  for (const { speed, duration } of phases) {
+    currentSpeed = speed;
+    await sleep(duration);
+    if (gen !== rollGeneration) {
+      clearTimeout(rollTimerId);
+      rollTimerId = null;
+      return false;
+    }
+  }
+  clearTimeout(rollTimerId);
+  rollTimerId = null;
+  return true;
+}
+
+async function generate() {
   if (state.ui.rolling) return;
   state.ui.rolling = true;
 
-  animateStart();                          // 1. 启动滚动动画
+  const gen = ++rollGeneration;
+  const { game, sets } = state.data;
+  const results = generateData();
 
-  setTimeout(() => {
-    animateStop();                         // 2. 停止动画
-    const results = generateData();        // 3. 生成最终数据（写入 state）
-    render(state.data.game, results);      // 4. 渲染最终结果（带进场动画）
-
-    const { game, sets } = state.data;
+  // 减少动态效果：跳过滚动，直接渲染最终结果
+  if (prefersReduced) {
+    state.data.results = results;
+    render(game, results, { noAnim: true });
     setStatus(`OK · ${sets} SETS · ${GAMES[game].name}`, true);
-    setTimeout(() => setStatus(`READY · LAST: ${GAMES[game].name} ${sets}注`, false), 2000);
-
+    saveHistory();
     state.ui.rolling = false;
-  }, CONFIG.ROLL_TIME);
+    return;
+  }
+
+  // 正常流程：滚动动画
+  els.rolling.classList.add('show');
+  els.btnGenerate.disabled = true;
+  setStatus('ROLLING...', true);
+  render(game, results, { noAnim: true });
+
+  // 缓存球节点，整个动画期间复用
+  const balls = Array.from(els.results.querySelectorAll('.ball'));
+
+  let completed = false;
+  try {
+    completed = await runRollingAnimation(gen, balls);
+  } catch (err) {
+    console.error('[generate] error:', err);
+    setStatus('ERROR — 请重试', false);
+  } finally {
+    if (gen === rollGeneration) resetRollingState();
+    else state.ui.rolling = false;
+  }
+
+  if (!completed || gen !== rollGeneration) return;
+
+  // 成功路径：直接写入最终数字到现有球元素，避免 DOM 重建闪烁
+  state.data.results = results;
+  const totalBallsPerRow = GAMES[game].sections.reduce((s, sec) => s + sec.pick, 0);
+  results.forEach((ticket, ti) => {
+    let bi = 0;
+    GAMES[game].sections.forEach(sec => {
+      ticket[sec.key].forEach(n => {
+        const ball = balls[ti * totalBallsPerRow + bi];
+        if (ball) ball.textContent = pad(n);
+        bi++;
+      });
+    });
+  });
+
+  // 落定动画：从滚动末态自然过渡到静止
+  balls.forEach(b => {
+    b.style.animation = 'none';
+    void b.offsetHeight; // 强制 reflow
+    b.style.animation = 'ballSettle 0.3s ease';
+  });
+
+  saveHistory();
+  setStatus(`OK · ${sets} SETS · ${GAMES[game].name}`, true);
+
+  await sleep(2000);
+  if (gen === rollGeneration) setStatus(`READY · LAST: ${GAMES[game].name} ${sets}注`, false);
 }
 
-// ── 复制（数据驱动）────────────────────────────────────────
+// ── 复制 ─────────────────────────────────────────────────────
 function copyResults() {
   if (!state.data.results.length) { setStatus('NO DATA', false); return; }
 
   const gameConf = GAMES[state.data.game];
   const lines = [gameConf.name];
-  const [sec1, sec2] = gameConf.sections;
 
-  // 遍历内存中的 state 数据，而不是去反查 DOM
   state.data.results.forEach((ticket, i) => {
-    const s1Str = ticket[sec1.key].map(pad).join(' ');
-    const s2Str = ticket[sec2.key].map(pad).join(' ');
-    lines.push(`第${pad(i + 1)}注  ${s1Str}  |  ${s2Str}`);
+    const parts = gameConf.sections.map(sec =>
+      `${sec.label}: ${ticket[sec.key].map(pad).join(' ')}`
+    );
+    lines.push(`第${pad(i + 1)}注  ${parts.join('  |  ')}`);
   });
 
   const text = lines.join('\n');
@@ -813,6 +1004,158 @@ function clearResults() {
   setStatus('CLEARED', false);
 }
 
+// ── 历史记录 ─────────────────────────────────────────────────
+const HISTORY_KEY = 'lottery_history';
+const MAX_HISTORY = 15;
+
+const SECTION_EMOJI = {
+  'ball-red':   '🔴',
+  'ball-blue':  '🔵',
+  'ball-front': '🔵',
+  'ball-back':  '🟡',
+};
+const SECTION_NUM_CLASS = {
+  'ball-red':   'hist-num-red',
+  'ball-blue':  'hist-num-blue',
+  'ball-front': 'hist-num-front',
+  'ball-back':  'hist-num-back',
+};
+
+function saveHistory() {
+  const { game, sets, results } = state.data;
+  if (!results.length) return;
+  const now = new Date();
+  const time = `${String(now.getMonth()+1).padStart(2,'0')}/${String(now.getDate()).padStart(2,'0')} ${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+  const entry = { id: Date.now(), game, sets, results, time };
+  let history = getHistory();
+  history.unshift(entry);
+  if (history.length > MAX_HISTORY) history.length = MAX_HISTORY;
+  try { localStorage.setItem(HISTORY_KEY, JSON.stringify(history)); } catch {}
+  renderHistory();
+}
+
+function getHistory() {
+  try {
+    const raw = localStorage.getItem(HISTORY_KEY);
+    if (!raw) return [];
+    const data = JSON.parse(raw);
+    if (!Array.isArray(data)) return [];
+    return data
+      .filter(entry =>
+        entry !== null &&
+        typeof entry === 'object' &&
+        typeof entry.game === 'string' &&
+        GAMES[entry.game] !== undefined &&
+        typeof entry.time === 'string' &&
+        Array.isArray(entry.results) &&
+        entry.results.length > 0
+      )
+      .slice(0, MAX_HISTORY);
+  } catch {
+    return [];
+  }
+}
+
+function clearHistory() {
+  try { localStorage.removeItem(HISTORY_KEY); } catch {}
+  renderHistory();
+  setStatus('HISTORY CLEARED', false);
+}
+
+function restoreFromHistory(entry) {
+  if (state.ui.rolling) return;
+  state.data.game = entry.game;
+  setSets(entry.sets);
+  document.querySelectorAll('.game-toggle [data-game]').forEach(b =>
+    b.classList.toggle('active', b.dataset.game === entry.game)
+  );
+  state.data.results = entry.results;
+  render(entry.game, entry.results, { noAnim: true });
+  setStatus(`RESTORED · ${GAMES[entry.game].name} ${entry.sets}注`, false);
+  els.machine.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function renderHistory() {
+  const history = getHistory();
+  els.historyCount.textContent = history.length ? `${history.length} 条` : '';
+
+  if (!history.length) {
+    els.historyList.innerHTML = '<div class="hist-empty">暂无历史记录</div>';
+    return;
+  }
+
+  els.historyList.innerHTML = '';
+  const frag = document.createDocumentFragment();
+
+  history.forEach(entry => {
+    const gameConf = GAMES[entry.game];
+    if (!gameConf) return;
+
+    const item = document.createElement('div');
+    item.className = 'hist-item';
+
+    const header = document.createElement('div');
+    header.className = 'hist-item-header';
+
+    const headerLeft = document.createElement('span');
+    headerLeft.className = 'hist-game';
+    headerLeft.textContent = gameConf.name;
+    header.appendChild(headerLeft);
+
+    const actions = document.createElement('div');
+    actions.className = 'hist-item-actions';
+
+    const meta = document.createElement('span');
+    meta.className = 'hist-meta';
+    meta.textContent = `${entry.sets}注 · ${entry.time}`;
+    actions.appendChild(meta);
+
+    const loadBtn = document.createElement('button');
+    loadBtn.className = 'btn-sm';
+    loadBtn.textContent = '加载';
+    loadBtn.addEventListener('click', () => restoreFromHistory(entry));
+    actions.appendChild(loadBtn);
+
+    header.appendChild(actions);
+    item.appendChild(header);
+
+    entry.results.forEach((ticket, idx) => {
+      const row = document.createElement('div');
+      row.className = 'hist-row';
+
+      const idxEl = document.createElement('span');
+      idxEl.className = 'hist-idx';
+      idxEl.textContent = pad(idx + 1);
+      row.appendChild(idxEl);
+
+      const nums = document.createElement('div');
+      nums.className = 'hist-nums';
+      gameConf.sections.forEach((sec) => {
+        const emoji = SECTION_EMOJI[sec.ballClass];
+        const numCls = SECTION_NUM_CLASS[sec.ballClass] || '';
+        ticket[sec.key].forEach((n, ni) => {
+          if (emoji && ni === 0) {
+            const em = document.createElement('span');
+            em.className = 'hist-emoji';
+            em.textContent = emoji;
+            nums.appendChild(em);
+          }
+          const b = document.createElement('span');
+          b.className = 'hist-num' + (numCls ? ' ' + numCls : '');
+          b.textContent = pad(n);
+          nums.appendChild(b);
+        });
+      });
+      row.appendChild(nums);
+      item.appendChild(row);
+    });
+
+    frag.appendChild(item);
+  });
+
+  els.historyList.appendChild(frag);
+}
+
 // ── 事件绑定 ─────────────────────────────────────────────────
 document.querySelector('.game-toggle').addEventListener('click', e => {
   const btn = e.target.closest('[data-game]');
@@ -826,8 +1169,15 @@ document.querySelector('.game-toggle').addEventListener('click', e => {
 document.querySelector('.stepper').addEventListener('click', e => {
   const btn = e.target.closest('[data-delta]');
   if (!btn) return;
-  state.data.sets = Math.min(CONFIG.MAX_SETS, Math.max(CONFIG.MIN_SETS, state.data.sets + Number(btn.dataset.delta)));
-  els.setsVal.textContent = state.data.sets;
+  setSets(state.data.sets + Number(btn.dataset.delta));
+});
+
+els.setsVal.addEventListener('change', () => { setSets(els.setsVal.value); });
+
+document.querySelector('.quick-sets').addEventListener('click', e => {
+  const btn = e.target.closest('[data-sets]');
+  if (!btn) return;
+  setSets(Number(btn.dataset.sets));
 });
 
 els.btnGenerate.addEventListener('click', generate);
@@ -838,14 +1188,48 @@ document.querySelector('.screen-actions').addEventListener('click', e => {
   ({ copy: copyResults, clear: clearResults })[btn.dataset.action]?.();
 });
 
-// 支持键盘快捷键触发摇号
-// Enter 键触发摇号；Space 保留给浏览器默认行为（按钮点击），不额外处理
+document.getElementById('btn-clear-history').addEventListener('click', clearHistory);
+
+renderHistory();
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && state.ui.rolling) {
+    ++rollGeneration;
+    resetRollingState();
+  }
+});
+
 document.addEventListener('keydown', e => {
   if (e.code === 'Enter' && !state.ui.rolling) {
     e.preventDefault();
     generate();
   }
 });
+
+/* ═══════════════════════════════════════════════
+   PWA：注册 Service Worker
+   ═══════════════════════════════════════════════ */
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('./sw.js', { scope: './' })
+    。then(reg => {
+      /* 检测到新版本，提示用户刷新 */
+      reg.addEventListener('updatefound', () => {
+        const newWorker = reg.installing;
+        newWorker.addEventListener('statechange', () => {
+          if (newWorker.state === 'activated' && navigator.serviceWorker.controller) {
+            setStatus('NEW VERSION AVAILABLE — 刷新页面更新', false);
+          }
+        });
+      });
+    })
+    。catch(err => console.warn('[SW] 注册失败:', err));
+
+  /* 页面加载时若已有等待中的新 SW，直接通知用户 */
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    setStatus('UPDATED — 正在应用新版本…', false);
+    window.location.reload();
+  });
+}
 </script>
 </body>
 </html>
