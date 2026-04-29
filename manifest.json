@@ -1,24 +1,29 @@
 {
-  "name": "彩票摇号机",
+  "name": "摇号机 · 彩票生成器"，
   "short_name": "摇号机",
-  "start_url": "/lottery.html",
-  "scope": "/",
+  "description": "基于 crypto.getRandomValues 的高质量随机数彩票号码生成器",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
   "orientation": "portrait",
+  "theme_color": "#0b0b0c",
   "background_color": "#0b0b0c",
-  "theme_color": "#ff7a1a",
-  "description": "密码学级随机的彩票选号工具",
+
   "icons": [
     {
-      "src": "/icon-192.png",
+      "src": "icon-192.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
-      "src": "/icon-512.png",
+      "src": "icon-512.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any maskable"
     }
-  ]
+  ],
+
+  "categories": ["utilities"],
+  "lang": "zh-CN"
 }
