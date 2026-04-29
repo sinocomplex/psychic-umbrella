@@ -5,7 +5,7 @@ const RUNTIME_NAME  = `lottery-runtime-${CACHE_VERSION}`;
 
 const PRECACHE_URLS = [
   './',
-  self。location.pathname.replace(/\/[^\/]*$/, '/') + 'index.html'
+  self.location.pathname.replace(/\/[^\/]*$/, '/') + 'index.html'
   './manifest.json',
   './icon-192.png',
   './icon-512.png'
