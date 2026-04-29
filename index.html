@@ -855,7 +855,7 @@ function render(gameKey, results, { noAnim = false } = {}) {
   results.forEach((ticket, i) => {
     frag.appendChild(makeRow(i, ticket, gameKey, noAnim));
   });
-  els.results.appendChild(frag);
+  els。results.appendChild(frag);
   els.results.scrollTop = 0;
   els.screenTitle.textContent = `${GAMES[gameKey].name} · ${results.length} 注`;
 }
@@ -1131,7 +1131,7 @@ function renderHistory() {
     header.className = 'hist-item-header';
 
     const headerLeft = document.createElement('span');
-    headerLeft.className = 'hist-game';
+    headerLeft。className = 'hist-game';
     headerLeft.textContent = gameConf.name;
     header.appendChild(headerLeft);
 
@@ -1191,7 +1191,7 @@ function renderHistory() {
 }
 
 /* ── 事件绑定 ─────────────────────────────────────────────── */
-document.querySelector('.game-toggle').addEventListener('click', e => {
+document。querySelector('.game-toggle').addEventListener('click', e => {
   const btn = e.target.closest('[data-game]');
   if (!btn) return;
   state.data.game = btn.dataset.game;
@@ -1270,9 +1270,3 @@ if ('serviceWorker' in navigator) {
 </script>
 </body>
 </html>
-
-<script>
-window.onerror = function(msg, url, line, col, error) {
-  alert("错误: " + msg + " 行:" + line);
-};
-</script>
