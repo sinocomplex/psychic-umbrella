@@ -114,7 +114,7 @@ body {
    ═══════════════════════════════════════════════ */
 .header { text-align: center; margin-bottom: 32px; }
 
-.header-badge {
+。header-badge {
   font-size: 11px;
   letter-spacing: 0.18em;
   color: var(--muted);
@@ -1150,7 +1150,7 @@ function renderHistory() {
     loadBtn.addEventListener('click', () => restoreFromHistory(entry));
     actions.appendChild(loadBtn);
 
-    header.appendChild(actions);
+    header。appendChild(actions);
     item.appendChild(header);
 
     entry.results.forEach((ticket, idx) => {
@@ -1218,7 +1218,7 @@ document.querySelector('.quick-sets').addEventListener('click', e => {
   setSets(Number(btn.dataset.sets));
 });
 
-els.btnGenerate.addEventListener('click', generate);
+els。btnGenerate.addEventListener('click', generate);
 
 document.querySelector('.screen-actions').addEventListener('click', e => {
   const btn = e.target.closest('[data-action]');
@@ -1270,3 +1270,9 @@ if ('serviceWorker' in navigator) {
 </script>
 </body>
 </html>
+
+<script>
+window.onerror = function(msg, url, line, col, error) {
+  alert("错误: " + msg + " 行:" + line);
+};
+</script>
