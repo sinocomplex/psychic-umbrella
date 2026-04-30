@@ -3,11 +3,11 @@
   "name": "摇号机 · 彩票生成器",
   "short_name": "摇号机",
   "description": "基于 crypto.getRandomValues 的高质量随机数彩票号码生成器",
-  "start_url": ".",
+  "start_url": "./index.html",
   "scope": "./",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui"],
-  "orientation": "portrait",
+  "orientation": "portrait-primary",
   "theme_color": "#0b0b0c",
   "background_color": "#0b0b0c",
   "icons": [
