@@ -1,172 +1,121 @@
-const CACHE_VERSION = 'v3';
+// ======================= 摇号机 Service Worker =======================
+// 缓存版本号——每次发版时递增，触发旧缓存清理
+const CACHE_VERSION = 'v1';
+const CACHE_NAME = `yaohaoji-${CACHE_VERSION}`;
 
-const PRECACHE_NAME = `lottery-precache-${CACHE_VERSION}`;
-const RUNTIME_NAME  = `lottery-runtime-${CACHE_VERSION}`;
-
+// 需要预缓存的静态资源（安装阶段缓存）
 const PRECACHE_URLS = [
   './',
-  self.location.pathname.replace(/\/[^\/]*$/, '/') + 'index.html'
+  './index.html',
   './manifest.json',
-  './icon-192.png',
-  './icon-512.png'
 ];
 
-const LONG_CACHE_ORIGINS = [
-  'https://fonts.googleapis.com',
-  'https://fonts.gstatic.com',
-];
+// 运行时缓存的策略分组
+const RUNTIME_CACHE = 'yaohaoji-runtime';
 
-const FONT_MAX_AGE = 30 * 24 * 3600;
-
-/* INSTALL */
+// 安装：预缓存核心资源，跳过等待立即激活
 self.addEventListener('install', event => {
   event.waitUntil(
-    caches.open(PRECACHE_NAME)
-      。then(cache => cache.addAll(PRECACHE_URLS))
-      。then(() => self.skipWaiting())
+    caches.open(CACHE_NAME)
+      .then(cache => cache.addAll(PRECACHE_URLS))
+      .then(() => self.skipWaiting())
   );
 });
 
-/* ACTIVATE */
+// 激活：清理旧版本缓存，立即接管所有客户端
 self.addEventListener('activate', event => {
+  const allowedCaches = new Set([CACHE_NAME, RUNTIME_CACHE]);
   event.waitUntil(
-    Promise.all([
-      self.registration.navigationPreload?.enable(),
-      caches.keys().then(keys =>
-        Promise.all(
-          keys
-            .filter(key =>
-              key.startsWith('lottery-') &&
-              key !== PRECACHE_NAME &&
-              key !== RUNTIME_NAME
-            )
+    caches.keys()
+      .then(keys => Promise.all(
+        keys.filter(key => !allowedCaches.has(key))
             .map(key => caches.delete(key))
-        )
-      )
-    ]).then(() => self.clients.claim())
+      ))
+      .then(() => self.clients.claim())
   );
 });
 
-/* FETCH */
+// 请求拦截：根据资源类型选择缓存策略
 self.addEventListener('fetch', event => {
   const { request } = event;
-  if (request.method !== 'GET') return;
-
   const url = new URL(request.url);
 
-  if (LONG_CACHE_ORIGINS.some(origin => url.origin === origin)) {
-    event.respondWith(staleWhileRevalidate(request, event, FONT_MAX_AGE));
+  // 仅处理同源请求
+  if (url.origin !== location.origin) {
+    // 外域资源（Google Fonts 等）：Stale-While-Revalidate
+    if (url.hostname === 'fonts.googleapis.com' ||
+        url.hostname === 'fonts.gstatic.com') {
+      event.respondWith(staleWhileRevalidate(request, RUNTIME_CACHE));
+    }
     return;
   }
 
+  // 导航请求（HTML）：Network First，离线时回退缓存
   if (request.mode === 'navigate') {
-    event.respondWith(networkFirst(request, event, true));
+    event.respondWith(networkFirst(request));
     return;
   }
 
-  if (url.origin === self.location.origin) {
-    event.respondWith(cacheFirst(request));
-    return;
-  }
-
-  event.respondWith(networkFirst(request, event, false));
+  // 静态资源：Cache First，未命中时网络请求并缓存
+  event.respondWith(cacheFirst(request));
 });
 
-/* CACHE FIRST */
+// ======================= 缓存策略 =======================
+
+// Cache First：优先从缓存读取，未命中则网络请求并写入缓存
 async function cacheFirst(request) {
-  const cache = await caches.open(RUNTIME_NAME);
-  const cached = await cache.match(request);
+  const cached = await caches.match(request);
   if (cached) return cached;
 
   try {
-    const fresh = await fetch(request);
-    if (fresh.ok) await cache.put(request, fresh.clone());
-    return fresh;
-  } catch {
-    return new Response(null, { status: 503 });
-  }
-}
-
-/* STALE WHILE REVALIDATE */
-async function staleWhileRevalidate(request, event, maxAgeSec = 0) {
-  const cache = await caches.open(RUNTIME_NAME);
-  const cached = await cache.match(request);
-
-  if (cached) {
-    event.waitUntil(
-      fetch(request)
-        .then(async fresh => {
-          if (fresh.ok) {
-            await cache.put(request, stampResponse(fresh.clone()));
-          }
-        })
-        .catch(() => {})
-    );
-    return cached;
-  }
-
-  try {
-    const fresh = await fetch(request);
-    if (fresh.ok) {
-      await cache.put(request, stampResponse(fresh.clone()));
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
     }
-    return fresh;
-  } catch {
-    return new Response(null, { status: 503 });
-  }
-}
-
-/* NETWORK FIRST */
-async function networkFirst(request, event, isNavigate = false) {
-  const cache = await caches.open(RUNTIME_NAME);
-
-  try {
-    const preload = await event.preloadResponse;
-    if (preload) return preload;
-
-    const fresh = await fetch(request);
-    if (fresh.ok) {
-      await cache.put(request, fresh.clone());
-    }
-    return fresh;
-  } catch {
-    const cached = await cache.match(request);
-    if (cached) return cached;
-
-    if (isNavigate) {
-      const precached = await caches.match('./index.html');
-      if (precached) return precached;
-
+    return response;
+  } catch (err) {
+    // 离线且无缓存：返回简化离线页面
+    if (request.destination === 'document') {
       return new Response(
-        `<!doctype html>
-         <meta charset="utf-8">
-         <title>离线</title>
-         <div style="
-           display:flex;
-           align-items:center;
-           justify-content:center;
-           height:100vh;
-           font-family:system-ui;
-           color:#999;
-         ">
-           📡 当前离线，请连接网络后重试
-         </div>`,
+        '<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>摇号机 · 离线</title><style>body{background:#0b0b0c;color:#f5f5f7;font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;text-align:center}h1{font-size:24px;margin-bottom:8px}p{color:#8e8e93;font-size:14px}</style></head><body><div><h1>📶 网络不可用</h1><p>请检查网络连接后刷新页面</p></div></body></html>',
         { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
       );
     }
-
-    return new Response(null, { status: 503 });
+    return new Response('', { status: 503, statusText: 'Offline' });
   }
 }
 
-/* UTIL */
-function stampResponse(response) {
-  const cloned = response.clone();
-  const headers = new Headers(cloned.headers);
-  headers.set('sw-timestamp', String(Date.now()));
-  return new Response(cloned.body, {
-    status: cloned.status,
-    statusText: cloned.statusText,
-    headers,
-  });
+// Network First：优先网络，失败时回退缓存
+async function networkFirst(request) {
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      const cache = await caches.open(CACHE_NAME);
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (err) {
+    const cached = await caches.match(request);
+    if (cached) return cached;
+    return new Response(
+      '<!DOCTYPE html><html lang="zh"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>摇号机 · 离线</title><style>body{background:#0b0b0c;color:#f5f5f7;font-family:sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;text-align:center}h1{font-size:24px;margin-bottom:8px}p{color:#8e8e93;font-size:14px}</style></head><body><div><h1>📶 网络不可用</h1><p>请检查网络连接后刷新页面</p></div></body></html>',
+      { headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+    );
+  }
+}
+
+// Stale-While-Revalidate：先返回缓存，后台更新
+async function staleWhileRevalidate(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+
+  const fetchPromise = fetch(request)
+    .then(response => {
+      if (response.ok) cache.put(request, response.clone());
+      return response;
+    })
+    .catch(() => cached);
+
+  return cached || fetchPromise;
 }
